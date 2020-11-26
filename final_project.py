@@ -1,6 +1,8 @@
 import csv
 import nltk
 import spacy
+from collections import Counter
+import seaborn as sns
 import sklearn
 import re
 
@@ -33,6 +35,8 @@ def list_of_clean_lemmas(sentence):
 
     print(clean_list)
 
+    return clean_list
+
 def pos_tagging_and_display(sentence):
 
     tokenizer = spacy.load("en_core_web_sm")
@@ -51,6 +55,19 @@ def ner_labeling_and_display(sentence):
 
     displacy.serve(token_list, style = "ent")
 
+def most_common_words_display(sentence):
+
+    freq = Counter(' '.join(map(str, list_of_clean_lemmas(sentence))).split(" "))
+    sns.set_style("darkgrid")
+    words = [word[0] for word in freq.most_common(10)]
+    count = [word[1] for word in freq.most_common(10)]
+
+    plt.figure(figsize=(10, 10))
+
+    sns_bar = sns.barplot(x=words, y=count)
+    sns_bar.set_xticklabels(words, rotation=90)
+    plt.title('Most Common Words')
+    plt.show()
 
 def data_preprocessing():
     # Read and cleanup data
@@ -64,8 +81,9 @@ def data_preprocessing():
                                "or suddenly entered and traversed by the rambler, at the bottom of a "
                                "hill, in the summer dusk; a furry warmth, golden midges.")
     list_of_clean_lemmas(sentence)
-    pos_tagging_and_display(sentence)
-    ner_labeling_and_display(sentence)
+    #pos_tagging_and_display(sentence)
+    #ner_labeling_and_display(sentence)
+    most_common_words_display(sentence)
 
 
 def final_project(name):
