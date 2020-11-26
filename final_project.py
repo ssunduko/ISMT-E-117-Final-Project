@@ -10,6 +10,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from importlib import reload
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.feature_extraction.text import CountVectorizer
 
 from pylab import *
 from nltk.corpus import stopwords
@@ -22,6 +24,24 @@ from spacy import displacy
 
 import string
 from spacy.lang.en.stop_words import STOP_WORDS
+
+def cosine_similarity_display(first_sentence, second_sentence):
+
+    clean_lemmas = []
+    first_lemmas = ' '.join(map(str, list_of_clean_lemmas(first_sentence)))
+    second_lemmas = ' '.join(map(str, list_of_clean_lemmas(second_sentence)))
+
+    clean_lemmas.append(first_lemmas)
+    clean_lemmas.append(second_lemmas)
+
+    clean_lemmas_array = TfidfVectorizer().fit_transform(clean_lemmas).toarray()
+
+    first_lemmas_vector = clean_lemmas_array[0].reshape(1,-1)
+    second_lemmas_vector = clean_lemmas_array[1].reshape(1, -1)
+
+    print(cosine_similarity(first_lemmas_vector,second_lemmas_vector)[0][0])
+
+    return cosine_similarity(first_lemmas_vector,second_lemmas_vector)[0][0]
 
 def list_of_clean_lemmas(sentence):
     clean_lemmas = []
@@ -72,18 +92,8 @@ def most_common_words_display(sentence):
 def data_preprocessing():
     # Read and cleanup data
     print ("Data Preprocessing ...")
-    sentence = ("My very photogenic mother died in a freak accident (picnic, lightning) "
-                               "when I was three, and, save for a pocket of warmth in the darkest past, "
-                               "nothing of her subsists within the hollows and dells of memory, over "
-                               "which, if you can still stand my style (I am writing under observation), "
-                               "the sun of my infancy had set: surely, you all know those redolent "
-                               "remnants of day suspended, with the midges, about some hedge in bloom "
-                               "or suddenly entered and traversed by the rambler, at the bottom of a "
-                               "hill, in the summer dusk; a furry warmth, golden midges.")
-    list_of_clean_lemmas(sentence)
-    #pos_tagging_and_display(sentence)
-    #ner_labeling_and_display(sentence)
-    most_common_words_display(sentence)
+
+    list_of_clean_lemmas(first_sentence)
 
 
 def final_project(name):
@@ -91,7 +101,10 @@ def final_project(name):
     print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
 
 def sergey_nlp():
-    print ("Sergey's Work")
+    pos_tagging_and_display(first_sentence)
+    ner_labeling_and_display(first_sentence)
+    most_common_words_display(first_sentence)
+    cosine_similarity_display(first_sentence, second_sentence)
 
 def morgan_nlp():
     print ("Morgan's Work")
@@ -109,6 +122,18 @@ def rekha_nlp():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     final_project('Welcome to Final Project')
+    first_sentence = ("My very photogenic mother died in a freak accident (picnic, lightning) "
+                      "when I was three, and, save for a pocket of warmth in the darkest past, "
+                      "nothing of her subsists within the hollows and dells of memory, over "
+                      "which, if you can still stand my style (I am writing under observation), "
+                      "the sun of my infancy had set: surely, you all know those redolent "
+                      "remnants of day suspended, with the midges, about some hedge in bloom "
+                      "or suddenly entered and traversed by the rambler, at the bottom of a "
+                      "hill, in the summer dusk; a furry warmth, golden midges.")
+    second_sentence = ("Kind of similar but not really surely, you all know those redolent "
+                       "remnants of day suspended, with the midges, about some hedge in bloom "
+                       "or suddenly entered and traversed by the rambler, at the bottom ")
+
     data_preprocessing()
     sergey_nlp()
     morgan_nlp()
