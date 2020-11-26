@@ -22,6 +22,24 @@ from sklearn import metrics
 from sklearn.cluster import KMeans, MiniBatchKMeans
 from spacy import displacy
 
+import re
+import numpy as np
+import io
+import pandas as pd
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud
+from PIL import Image
+import PIL.ImageOps
+from wordcloud import ImageColorGenerator
+import string
+import unicodedata
+from nltk.corpus import stopwords
+import nltk
+import spacy
+import random
+from os import path, getcwd
+from PIL import Image
+
 import string
 from spacy.lang.en.stop_words import STOP_WORDS
 
@@ -89,8 +107,30 @@ def most_common_words_display(sentence):
     plt.title('Most Common Words')
     plt.show()
 
+def transform_format(val):
+    if val == 0:
+        return 255
+    else:
+        return val
+
+def word_cloud_display(sentence):
+
+    d = getcwd()
+    mask = np.array(Image.open(path.join(d, "ISMT-E-117-Final-Project/resources/family-gathering.jpg")))
+    image_colors = ImageColorGenerator(mask)
+
+
+    wc = WordCloud(background_color="black", max_words=200, width=400, height=400,
+                 mask=mask, random_state=1).generate(' '.join(map(str, list_of_clean_lemmas(sentence))))
+
+    plt.figure(figsize=[7, 7])
+    plt.imshow(wc.recolor(color_func=image_colors), interpolation="bilinear")
+    plt.axis("off")
+    plt.imshow(wc.recolor(color_func=image_colors))
+    plt.savefig('ISMT-E-117-Final-Project/resources/wordcloud.jpg', dpi=200)
+    plt.show()
+
 def data_preprocessing():
-    # Read and cleanup data
     print ("Data Preprocessing ...")
 
     list_of_clean_lemmas(first_sentence)
@@ -105,6 +145,7 @@ def sergey_nlp():
     ner_labeling_and_display(first_sentence)
     most_common_words_display(first_sentence)
     cosine_similarity_display(first_sentence, second_sentence)
+    word_cloud_display(first_sentence)
 
 def morgan_nlp():
     print ("Morgan's Work")
