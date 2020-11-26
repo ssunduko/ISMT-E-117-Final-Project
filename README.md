@@ -7,6 +7,6 @@
 #### Team
 * Sergey Sundukovskiy (ssunduko@gmail.com)
 * Morgan Hulsey (mdhulsey@gmail.com)
-* Norberbo Nava Casas (norberto_nava@hotmail.com)
+* Norberto Nava Casas (norberto_nava@hotmail.com)
 * Freeman Smith (frs845@g.harvard.edu)
 * Rekha Sundararajan (rekha86sundararajan@gmail.com)
