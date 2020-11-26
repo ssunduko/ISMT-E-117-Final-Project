@@ -22,33 +22,36 @@ from sklearn.cluster import KMeans, MiniBatchKMeans
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
 
+def data_preprocessing():
+    # Read and cleanup data
+    print ("Data Preprocessing ...")
+
 def final_project(name):
     # Use a breakpoint in the code line below to debug your script.
     print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
 
 def sergey_nlp():
-    print ("Hello From Sergey")
+    print ("Sergey's Work")
 
 def morgan_nlp():
-    print ("Hello From Morgan")
+    print ("Morgan's Work")
 
 def norberto_nlp():
-    print ("Hello From Norberto")
+    print ("Norberto's Work")
 
 def freeman_nlp():
-    print ("Hello From Freeman")
+    print ("Freeman's Work")
 
 def rekha_nlp():
-    print ("Hello From Rekha")
+    print ("Rekha's Work")
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     final_project('Welcome to Final Project')
+    data_preprocessing()
     sergey_nlp()
     morgan_nlp()
     norberto_nlp()
     freeman_nlp()
     rekha_nlp()
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
