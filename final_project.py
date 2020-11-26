@@ -23,10 +23,7 @@ from sklearn.cluster import KMeans, MiniBatchKMeans
 from spacy import displacy
 
 import re
-import numpy as np
 import io
-import pandas as pd
-import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 from PIL import Image
 import PIL.ImageOps
@@ -107,12 +104,6 @@ def most_common_words_display(sentence):
     plt.title('Most Common Words')
     plt.show()
 
-def transform_format(val):
-    if val == 0:
-        return 255
-    else:
-        return val
-
 def word_cloud_display(sentence):
 
     d = getcwd()
@@ -141,6 +132,8 @@ def final_project(name):
     print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
 
 def sergey_nlp():
+    print("Sergey's Work")
+
     pos_tagging_and_display(first_sentence)
     ner_labeling_and_display(first_sentence)
     most_common_words_display(first_sentence)
