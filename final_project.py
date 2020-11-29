@@ -10,6 +10,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from importlib import reload
+
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import CountVectorizer
 
@@ -40,11 +42,36 @@ from PIL import Image
 import string
 from spacy.lang.en.stop_words import STOP_WORDS
 
+def important_factors_display(sentence):
+
+    d = getcwd()
+
+    tfidf_vectorizer = TfidfVectorizer()
+    tfidf = tfidf_vectorizer.fit_transform(list_of_clean_tokens(sentence))
+
+    lsa = TruncatedSVD(25, algorithm='randomized')
+    dtm_lsa = lsa.fit_transform(tfidf)
+    dtm_lsa = Normalizer(copy=False).fit_transform(dtm_lsa)
+
+    sing_vecs = lsa.components_[0]
+    index = np.argsort(sing_vecs).tolist()
+    index.reverse()
+
+    terms = [tfidf_vectorizer.get_feature_names()[weightIndex] for weightIndex in index[0:10]]
+    weights = [sing_vecs[weightIndex] for weightIndex in index[0:10]]
+
+    terms.reverse()
+    weights.reverse()
+
+    plt.barh(terms, weights, align="center")
+    plt.savefig(path.join(d, 'ISMT-E-117-Final-Project/resources/word_weight.jpg'), dpi=200)
+    plt.show()
+
 def cosine_similarity_display(first_sentence, second_sentence):
 
     clean_lemmas = []
-    first_lemmas = ' '.join(map(str, list_of_clean_lemmas(first_sentence)))
-    second_lemmas = ' '.join(map(str, list_of_clean_lemmas(second_sentence)))
+    first_lemmas = ' '.join(map(str, list_of_clean_tokens(first_sentence)))
+    second_lemmas = ' '.join(map(str, list_of_clean_tokens(second_sentence)))
 
     clean_lemmas.append(first_lemmas)
     clean_lemmas.append(second_lemmas)
@@ -54,23 +81,26 @@ def cosine_similarity_display(first_sentence, second_sentence):
     first_lemmas_vector = clean_lemmas_array[0].reshape(1,-1)
     second_lemmas_vector = clean_lemmas_array[1].reshape(1, -1)
 
-    print(cosine_similarity(first_lemmas_vector,second_lemmas_vector)[0][0])
-
     return cosine_similarity(first_lemmas_vector,second_lemmas_vector)[0][0]
 
-def list_of_clean_lemmas(sentence):
-    clean_lemmas = []
+def list_of_clean_tokens(sentence):
+
     tokenizer = spacy.lang.en.English()
     token_list = tokenizer(sentence)
 
-    for word in token_list:
-        clean_lemmas.append(word.lemma_.lower().strip() if word.lemma_ != "-PRON-" else word.lower_)
-    clean_list = [word for word in clean_lemmas if word not in STOP_WORDS
-                  and word not in string.punctuation and not word.isnumeric()]
+    token_list = [word.lower_.strip() for word in token_list if word.is_alpha and not word.is_stop]
 
-    print(clean_list)
+    return token_list
 
-    return clean_list
+
+def list_of_clean_lemmas(sentence):
+
+    tokenizer = spacy.load('en_core_web_sm')
+    token_list = tokenizer(' '.join(map(str, list_of_clean_tokens(sentence))))
+
+    token_list = [word.lemma_ for word in token_list if word.lemma_ != "-PRON-"]
+
+    return token_list
 
 def pos_tagging_and_display(sentence):
 
@@ -92,7 +122,7 @@ def ner_labeling_and_display(sentence):
 
 def most_common_words_display(sentence):
 
-    freq = Counter(' '.join(map(str, list_of_clean_lemmas(sentence))).split(" "))
+    freq = Counter(' '.join(map(str, list_of_clean_tokens(sentence))).split(" "))
     sns.set_style("darkgrid")
     words = [word[0] for word in freq.most_common(10)]
     count = [word[1] for word in freq.most_common(10)]
@@ -112,18 +142,19 @@ def word_cloud_display(sentence):
 
 
     wc = WordCloud(background_color="white", max_words=200, width=400, height=400,
-                 mask=mask, random_state=1).generate(' '.join(map(str, list_of_clean_lemmas(sentence))))
+                 mask=mask, random_state=1).generate(' '.join(map(str, list_of_clean_tokens(sentence))))
 
     plt.figure(figsize=[7, 7])
     plt.imshow(wc.recolor(color_func=image_colors), interpolation="bilinear")
     plt.axis("off")
     plt.imshow(wc.recolor(color_func=image_colors))
-    plt.savefig(path.join(d, 'resources/wordcloud.jpg'), dpi=200)
+    plt.savefig(path.join(d, 'ISMT-E-117-Final-Project/resources/wordcloud.jpg'), dpi=200)
     plt.show()
 
 def data_preprocessing():
     print ("Data Preprocessing ...")
 
+    list_of_clean_tokens(first_sentence)
     list_of_clean_lemmas(first_sentence)
 
 
@@ -132,6 +163,7 @@ def final_project(name):
     print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
 
 def sergey_nlp():
+
     print("Sergey's Work")
 
     pos_tagging_and_display(first_sentence)
@@ -139,6 +171,7 @@ def sergey_nlp():
     most_common_words_display(first_sentence)
     cosine_similarity_display(first_sentence, second_sentence)
     word_cloud_display(first_sentence)
+    important_factors_display(first_sentence)
 
 def morgan_nlp():
     print ("Morgan's Work")
@@ -156,11 +189,11 @@ def rekha_nlp():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     final_project('Welcome to Final Project')
-    first_sentence = ("My very photogenic mother died in a freak accident (picnic, lightning) "
-                      "when I was three, and, save for a pocket of warmth in the darkest past, "
+    first_sentence = ("My is drying reduction very photogenic mother died in a freak accident (picnic, lightning) "
+                      "when I was three, and, save for a pocket of warmth in. the darkest past, "
                       "nothing of her subsists within the hollows and dells of memory, over "
-                      "which, if you can still stand my style (I am writing under observation), "
-                      "the sun of my infancy had set: surely, you all know those redolent "
+                      "which, can't if you can still stand my style (I am writing under observation), "
+                      "the sun of my 145 infancy had set: surely, you all know those redolent "
                       "remnants of day suspended, with the midges, about some hedge in bloom "
                       "or suddenly entered and traversed by the rambler, at the bottom of a "
                       "hill, in the summer dusk; a furry warmth, golden midges.")
