@@ -107,18 +107,18 @@ def most_common_words_display(sentence):
 def word_cloud_display(sentence):
 
     d = getcwd()
-    mask = np.array(Image.open(path.join(d, "ISMT-E-117-Final-Project/resources/family-gathering.jpg")))
+    mask = np.array(Image.open(path.join(d, "resources/family-gathering.png")))
     image_colors = ImageColorGenerator(mask)
 
 
-    wc = WordCloud(background_color="black", max_words=200, width=400, height=400,
+    wc = WordCloud(background_color="white", max_words=200, width=400, height=400,
                  mask=mask, random_state=1).generate(' '.join(map(str, list_of_clean_lemmas(sentence))))
 
     plt.figure(figsize=[7, 7])
     plt.imshow(wc.recolor(color_func=image_colors), interpolation="bilinear")
     plt.axis("off")
     plt.imshow(wc.recolor(color_func=image_colors))
-    plt.savefig('ISMT-E-117-Final-Project/resources/wordcloud.jpg', dpi=200)
+    plt.savefig(path.join(d, 'resources/wordcloud.jpg'), dpi=200)
     plt.show()
 
 def data_preprocessing():
