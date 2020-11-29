@@ -66,7 +66,7 @@ def list_of_clean_lemmas(sentence):
     for word in token_list:
         clean_lemmas.append(word.lemma_.lower().strip() if word.lemma_ != "-PRON-" else word.lower_)
     clean_list = [word for word in clean_lemmas if word not in STOP_WORDS
-                  and word not in string.punctuation]
+                  and word not in string.punctuation and not word.isnumeric()]
 
     print(clean_list)
 
