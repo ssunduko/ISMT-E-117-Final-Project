@@ -1,10 +1,13 @@
 import csv
+from itertools import islice
+
 import nltk
 import spacy
 from collections import Counter
 import seaborn as sns
 import sklearn
 import re
+from csv import DictReader
 
 import pandas as pd
 import numpy as np
@@ -42,12 +45,12 @@ from PIL import Image
 import string
 from spacy.lang.en.stop_words import STOP_WORDS
 
-def important_factors_display(sentence):
+def important_factors_display(list_of_sentences):
 
     d = getcwd()
 
     tfidf_vectorizer = TfidfVectorizer()
-    tfidf = tfidf_vectorizer.fit_transform(list_of_clean_tokens(sentence))
+    tfidf = tfidf_vectorizer.fit_transform(list_of_sentences)
 
     lsa = TruncatedSVD(25, algorithm='randomized')
     dtm_lsa = lsa.fit_transform(tfidf)
@@ -67,21 +70,29 @@ def important_factors_display(sentence):
     plt.savefig(path.join(d, 'ISMT-E-117-Final-Project/resources/word_weight.jpg'), dpi=200)
     plt.show()
 
-def cosine_similarity_display(first_sentence, second_sentence):
+def cosine_similarity_display(document_corpus, sentence):
 
-    clean_lemmas = []
-    first_lemmas = ' '.join(map(str, list_of_clean_tokens(first_sentence)))
-    second_lemmas = ' '.join(map(str, list_of_clean_tokens(second_sentence)))
+    document_corpus.append(sentence)
 
-    clean_lemmas.append(first_lemmas)
-    clean_lemmas.append(second_lemmas)
+    tfidf_vectorizer = TfidfVectorizer(stop_words='english')
+    sparse_matrix = tfidf_vectorizer.fit_transform(document_corpus)
 
-    clean_lemmas_array = TfidfVectorizer().fit_transform(clean_lemmas).toarray()
+    cosine = cosine_similarity(sparse_matrix[0:1], sparse_matrix)
 
-    first_lemmas_vector = clean_lemmas_array[0].reshape(1,-1)
-    second_lemmas_vector = clean_lemmas_array[1].reshape(1, -1)
+    circle1 = plt.Circle((0, 0), 1, alpha=.5)
+    plt.ylim([-1.1, 1.1])
+    fig = plt.gcf()
+    fig.gca().add_artist(circle1)
 
-    return cosine_similarity(first_lemmas_vector,second_lemmas_vector)[0][0]
+    for i in range(len(cosine)):
+        for j in range(len(cosine[i])):
+            d = 2 * 1 * (1 - cosine[0][j])
+            circle2 = plt.Circle((d, 0), 1, alpha=.5)
+            plt.xlim([-1.1, 1.1 + d])
+            fig.gca().add_artist(circle2)
+
+    plt.savefig('ISMT-E-117-Final-Project/resources/cosine_overlap.jpg')
+    plt.show()
 
 def list_of_clean_tokens(sentence):
 
@@ -122,7 +133,8 @@ def ner_labeling_and_display(sentence):
 
 def most_common_words_display(sentence):
 
-    freq = Counter(' '.join(map(str, list_of_clean_tokens(sentence))).split(" "))
+    d = getcwd()
+    freq = Counter(sentence.split(" "))
     sns.set_style("darkgrid")
     words = [word[0] for word in freq.most_common(10)]
     count = [word[1] for word in freq.most_common(10)]
@@ -132,46 +144,60 @@ def most_common_words_display(sentence):
     sns_bar = sns.barplot(x=words, y=count)
     sns_bar.set_xticklabels(words, rotation=90)
     plt.title('Most Common Words')
+    plt.savefig(path.join(d, 'ISMT-E-117-Final-Project/resources/word_count.jpg'), dpi=200)
     plt.show()
 
 def word_cloud_display(sentence):
 
     d = getcwd()
-    mask = np.array(Image.open(path.join(d, "resources/family-gathering.png")))
+    mask = np.array(Image.open(path.join(d, "ISMT-E-117-Final-Project/resources/family-gathering.png")))
     image_colors = ImageColorGenerator(mask)
 
 
     wc = WordCloud(background_color="white", max_words=200, width=400, height=400,
-                 mask=mask, random_state=1).generate(' '.join(map(str, list_of_clean_tokens(sentence))))
+                 mask=mask, random_state=1).generate(sentence)
 
     plt.figure(figsize=[7, 7])
     plt.imshow(wc.recolor(color_func=image_colors), interpolation="bilinear")
     plt.axis("off")
     plt.imshow(wc.recolor(color_func=image_colors))
-    plt.savefig(path.join(d, 'ISMT-E-117-Final-Project/resources/wordcloud.jpg'), dpi=200)
+    plt.savefig(path.join(d, 'ISMT-E-117-Final-Project/resources/word_cloud.jpg'), dpi=200)
     plt.show()
 
 def data_preprocessing():
-    print ("Data Preprocessing ...")
 
-    list_of_clean_tokens(first_sentence)
-    list_of_clean_lemmas(first_sentence)
+    print ("Data Preprocessing ...")
+    tokenizer = spacy.load("en_core_web_sm")
+
+    with open('ISMT-E-117-Final-Project/data/data_set.csv', 'r') as read_obj:
+        csv_dict_reader = DictReader(read_obj)
+        for row in islice(csv_dict_reader, 50):
+            tokens = ' '.join(map(str, list_of_clean_tokens(row['tweet'])))
+            lemmas = ' '.join(map(str, list_of_clean_lemmas(row['tweet'])))
+            clean_token_sentences.append(tokens)
+            clean_lemma_sentences.append(lemmas)
+            clean_tokens.append(tokenizer(tokens))
+            dirty_sentences.append(row['tweet'])
 
 
 def final_project(name):
     # Use a breakpoint in the code line below to debug your script.
     print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
 
+
 def sergey_nlp():
+
+    data_preprocessing()
+    clean_tokens_strings = ' '.join(map(str, clean_tokens))
 
     print("Sergey's Work")
 
-    pos_tagging_and_display(first_sentence)
-    ner_labeling_and_display(first_sentence)
-    most_common_words_display(first_sentence)
-    cosine_similarity_display(first_sentence, second_sentence)
-    word_cloud_display(first_sentence)
-    important_factors_display(first_sentence)
+    most_common_words_display(clean_tokens_strings)
+    cosine_similarity_display(clean_lemma_sentences,' '.join(map(str, list_of_clean_lemmas("I want to kill myself"))))
+    word_cloud_display(clean_tokens_strings)
+    important_factors_display(clean_token_sentences)
+    pos_tagging_and_display(clean_tokens_strings)
+    ner_labeling_and_display(clean_tokens_strings)
 
 def morgan_nlp():
     print ("Morgan's Work")
@@ -188,20 +214,15 @@ def rekha_nlp():
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    final_project('Welcome to Final Project')
-    first_sentence = ("My is drying reduction very photogenic mother died in a freak accident (picnic, lightning) "
-                      "when I was three, and, save for a pocket of warmth in. the darkest past, "
-                      "nothing of her subsists within the hollows and dells of memory, over "
-                      "which, can't if you can still stand my style (I am writing under observation), "
-                      "the sun of my 145 infancy had set: surely, you all know those redolent "
-                      "remnants of day suspended, with the midges, about some hedge in bloom "
-                      "or suddenly entered and traversed by the rambler, at the bottom of a "
-                      "hill, in the summer dusk; a furry warmth, golden midges.")
-    second_sentence = ("Kind of similar but not really surely, you all know those redolent "
-                       "remnants of day suspended, with the midges, about some hedge in bloom "
-                       "or suddenly entered and traversed by the rambler, at the bottom ")
 
-    data_preprocessing()
+    final_project('Welcome to Final Project')
+
+    dirty_sentences = []
+    clean_token_sentences = []
+    clean_lemma_sentences = []
+    clean_tokens = []
+    clena_lemmas = []
+
     sergey_nlp()
     morgan_nlp()
     norberto_nlp()
