@@ -45,6 +45,21 @@ from PIL import Image
 import string
 from spacy.lang.en.stop_words import STOP_WORDS
 
+def classification_display(list_of_sentences):
+    print("In Classification")
+
+def sentiment_display(list_of_sentences):
+    print("In Sentiment")
+
+def reason_display(list_of_sentences):
+    print("In Reason")
+
+def adjectives_display(list_of_sentences):
+    print("In Adjectives")
+
+def intention_vs_action_display(list_of_sentences):
+    print("In Intention")
+
 def important_factors_display(list_of_sentences):
 
     d = getcwd()
@@ -67,7 +82,7 @@ def important_factors_display(list_of_sentences):
     weights.reverse()
 
     plt.barh(terms, weights, align="center")
-    plt.savefig(path.join(d, 'ISMT-E-117-Final-Project/resources/word_weight.jpg'), dpi=200)
+    plt.savefig(path.join(d, 'resources/word_weight.jpg'), dpi=200)
     plt.show()
 
 def cosine_similarity_display(document_corpus, sentence):
@@ -144,13 +159,13 @@ def most_common_words_display(sentence):
     sns_bar = sns.barplot(x=words, y=count)
     sns_bar.set_xticklabels(words, rotation=90)
     plt.title('Most Common Words')
-    plt.savefig(path.join(d, 'ISMT-E-117-Final-Project/resources/word_count.jpg'), dpi=200)
+    plt.savefig(path.join(d, 'resources/word_count.jpg'), dpi=200)
     plt.show()
 
 def word_cloud_display(sentence):
 
     d = getcwd()
-    mask = np.array(Image.open(path.join(d, "ISMT-E-117-Final-Project/resources/family-gathering.png")))
+    mask = np.array(Image.open(path.join(d, "resources/family-gathering.png")))
     image_colors = ImageColorGenerator(mask)
 
 
@@ -161,7 +176,7 @@ def word_cloud_display(sentence):
     plt.imshow(wc.recolor(color_func=image_colors), interpolation="bilinear")
     plt.axis("off")
     plt.imshow(wc.recolor(color_func=image_colors))
-    plt.savefig(path.join(d, 'ISMT-E-117-Final-Project/resources/word_cloud.jpg'), dpi=200)
+    plt.savefig(path.join(d, 'resources/word_cloud.jpg'), dpi=200)
     plt.show()
 
 def data_preprocessing():
@@ -169,7 +184,7 @@ def data_preprocessing():
     print ("Data Preprocessing ...")
     tokenizer = spacy.load("en_core_web_sm")
 
-    with open('ISMT-E-117-Final-Project/data/data_set.csv', 'r') as read_obj:
+    with open('data/data_set.csv', 'r') as read_obj:
         csv_dict_reader = DictReader(read_obj)
         for row in islice(csv_dict_reader, 50):
             tokens = ' '.join(map(str, list_of_clean_tokens(row['tweet'])))
@@ -186,11 +201,10 @@ def final_project(name):
 
 
 def sergey_nlp():
+    print("Sergey's Work")
 
     data_preprocessing()
     clean_tokens_strings = ' '.join(map(str, clean_tokens))
-
-    print("Sergey's Work")
 
     most_common_words_display(clean_tokens_strings)
     cosine_similarity_display(clean_lemma_sentences,' '.join(map(str, list_of_clean_lemmas("I want to kill myself"))))
@@ -203,13 +217,21 @@ def morgan_nlp():
     print ("Morgan's Work")
 
 def norberto_nlp():
-    print ("Norberto's Work")
+    print("Norberto's Work")
+
+    classification_display(clean_lemma_sentences)
+
 
 def freeman_nlp():
     print ("Freeman's Work")
 
+    reason_display(clean_lemma_sentences)
+    adjectives_display(clean_lemma_sentences)
+    intention_vs_action_display(clean_lemma_sentences)
+
 def rekha_nlp():
     print ("Rekha's Work")
+    sentiment_display(clean_lemma_sentences)
 
 
 # Press the green button in the gutter to run the script.
