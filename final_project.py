@@ -106,7 +106,7 @@ def cosine_similarity_display(document_corpus, sentence):
             plt.xlim([-1.1, 1.1 + d])
             fig.gca().add_artist(circle2)
 
-    plt.savefig('ISMT-E-117-Final-Project/resources/cosine_overlap.jpg')
+    plt.savefig('resources/cosine_overlap.jpg')
     plt.show()
 
 def list_of_clean_tokens(sentence):
