@@ -45,11 +45,53 @@ from PIL import Image
 import string
 from spacy.lang.en.stop_words import STOP_WORDS
 
+from textblob import TextBlob
+from textblob.sentiments import NaiveBayesAnalyzer
+
+from sklearn.metrics import accuracy_score
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.linear_model import SGDClassifier
+from sklearn.linear_model import LogisticRegression
+
+from sklearn.metrics import precision_recall_fscore_support as score
+from sklearn.model_selection import train_test_split
+
+
 def classification_display(list_of_sentences):
     print("In Classification")
 
-def sentiment_display(list_of_sentences):
+def sentiment_display():
     print("In Sentiment")
+    suicide_dataset = read_dataset()[3000:4000]
+    emotions_dataset = read_emotion_dataset()
+
+    tfidf_vect, tfidf = tfidf_vectorizer(emotions_dataset['cleaned'])
+    X_features = pd.concat([pd.DataFrame(tfidf.toarray())], axis=1)
+    X_train, X_val, y_train, y_val = train_test_split(X_features, emotions_dataset['emotion_label'], test_size=0.2)
+    nb_tfidf = naive_bayes_model(X_train, X_val, y_train, y_val)
+    sgd_tfidf = sgd_classifier_model(X_train, X_val, y_train, y_val)
+    logreg_tfidf = logistic_regression_model(X_train, X_val, y_train, y_val)
+    rf_tfidf = random_forest_model(X_train, X_val, y_train, y_val)
+
+    count_vect, count = count_vectorizer(emotions_dataset['cleaned'])
+    X_features = pd.concat([pd.DataFrame(count.toarray())], axis=1)
+    X_train, X_val, y_train, y_val = train_test_split(X_features, emotions_dataset['emotion_label'], test_size=0.2)
+    nb_count = naive_bayes_model(X_train, X_val, y_train, y_val)
+    sgd_count = sgd_classifier_model(X_train, X_val, y_train, y_val)
+    logreg_count = logistic_regression_model(X_train, X_val, y_train, y_val)
+    rf_count = random_forest_model(X_train, X_val, y_train, y_val)
+
+    suicide_dataset['nb_tfidf'] = suicide_dataset['cleaned'].apply(lambda x: value_to_emotions(nb_tfidf.predict(tfidf_vect.transform([x]))[0]))
+    suicide_dataset['sgd_tfidf'] = suicide_dataset['cleaned'].apply(lambda x: value_to_emotions(sgd_tfidf.predict(tfidf_vect.transform([x]))[0]))
+    suicide_dataset['logreg_tfidf'] = suicide_dataset['cleaned'].apply(lambda x: value_to_emotions(logreg_tfidf.predict(tfidf_vect.transform([x]))[0]))
+    suicide_dataset['rf_tfidf'] = suicide_dataset['cleaned'].apply(lambda x: value_to_emotions(rf_tfidf.predict(tfidf_vect.transform([x]))[0]))
+    suicide_dataset['nb_count'] = suicide_dataset['cleaned'].apply(lambda x: value_to_emotions(nb_count.predict(count_vect.transform([x]))[0]))
+    suicide_dataset['sgd_count'] = suicide_dataset['cleaned'].apply(lambda x: value_to_emotions(sgd_count.predict(count_vect.transform([x]))[0]))
+    suicide_dataset['logreg_count'] = suicide_dataset['cleaned'].apply(lambda x: value_to_emotions(logreg_count.predict(count_vect.transform([x]))[0]))
+    suicide_dataset['rf_count'] = suicide_dataset['cleaned'].apply(lambda x: value_to_emotions(rf_count.predict(count_vect.transform([x]))[0]))
+
+    suicide_dataset.to_csv('resources/testset_emotions.csv',sep=',')
+    print ("Test Set data is available in resources/testset_emotions.csv")
 
 def reason_display(list_of_sentences):
     print("In Reason")
@@ -194,6 +236,90 @@ def data_preprocessing():
             clean_tokens.append(tokenizer(tokens))
             dirty_sentences.append(row['tweet'])
 
+def read_dataset():
+    data = pd.read_csv('data/data_set.csv')
+    data['cleaned'] = data['tweet'].apply(lambda x: clean_sentences(x))
+    data['sentiments'] = data['cleaned'].apply(lambda x: sentiment_analysis(x))
+    return data
+
+def read_emotion_dataset():
+    data = pd.read_csv('data/dataset_emotions.csv')
+    data['cleaned'] = data['tweet'].apply(lambda x: clean_sentences(x))
+    data['sentiments'] = data['cleaned'].apply(lambda x: sentiment_analysis(x))
+    data['emotion_label'] = data['emotion'].apply(lambda x: emotions_to_index(x))
+    return data
+
+def emotions_to_index(label):
+    generic_emotions = {'anger': 0, 'disgust': 1, 'fear': 2, 'joy': 3, 'neutral': 4, 'sadness': 5, 'surprise': 6, 'unknown': 7}
+    if (label in generic_emotions.keys()):
+        return (generic_emotions[label])
+    else: return (generic_emotions['unknown'])
+
+def value_to_emotions(val):
+    generic_emotions = {'anger': 0, 'disgust': 1, 'fear': 2, 'joy': 3, 'neutral': 4, 'sadness': 5, 'surprise': 6, 'unknown': 7}
+    for key, value in generic_emotions.items():
+        if val == value:
+            return key
+    return 'unknown'
+
+def clean_sentences(sentence):
+    noNumbers = ''.join([item for item in sentence if not item.isnumeric()])
+    noPunct = ''.join([item for item in noNumbers if item not in string.punctuation])
+    lowerWords = noPunct.lower()
+    return (lowerWords)
+
+def tfidf_vectorizer(data):
+    print ("TF-IDF Vectorizer")
+    tfidf_vect = TfidfVectorizer()
+    X_train_tfidf = tfidf_vect.fit_transform(data)
+    return tfidf_vect, X_train_tfidf
+
+def count_vectorizer(data):
+    print ("Count Vectorizer")
+    count_vect = CountVectorizer()
+    X_train_count = count_vect.fit_transform(data)
+    return count_vect, X_train_count
+
+def print_predictions(yval, y_pred, algorithm):
+    print('%s accuracy %s'.format(algorithm, accuracy_score(y_pred, yval)))
+    precision, recall, fscore, support = score(yval, y_pred, average='weighted')
+    print ("Precision: {} Recall: {} Accuracy: {}".format(round(precision,2),
+                                                            round(recall,2),
+                                                            round((y_pred==yval).sum()/len(y_pred), 2)))
+
+def naive_bayes_model(xtrain, xval, ytrain, yval):
+    nb = MultinomialNB()
+    nb.fit(xtrain, ytrain)
+    y_pred = nb.predict(xval)
+    print_predictions(yval, y_pred, 'Naive Bayes Model')
+    return nb
+
+def sgd_classifier_model(xtrain, xval, ytrain, yval):
+    lsvm = SGDClassifier(alpha=0.001, random_state=5, max_iter=15, tol=None)
+    lsvm.fit(xtrain, ytrain)
+    y_pred = lsvm.predict(xval)
+    print_predictions(yval, y_pred, 'SGD Classifier')
+    return lsvm
+
+def logistic_regression_model(xtrain, xval, ytrain, yval):
+    logreg = LogisticRegression(C=1)
+    logreg.fit(xtrain, ytrain)
+    y_pred = logreg.predict(xval)
+    print_predictions(yval, y_pred, 'Logistic Regression')
+    return logreg
+
+def random_forest_model(xtrain, xval, ytrain, yval):
+    rf = RandomForestClassifier(n_estimators=500)
+    rf.fit(xtrain, ytrain)
+    y_pred = rf.predict(xval)
+    print_predictions(yval, y_pred, 'Random Forest Classifier')
+    return rf
+
+def sentiment_analysis(review):
+    # 0 - 'Negative', 1 - 'Neutral', 3 - 'Positive']
+    blob = TextBlob(review)
+    sentiment = round((blob.sentiment.polarity + 1) * 3) % 3
+    return sentiment
 
 def final_project(name):
     # Use a breakpoint in the code line below to debug your script.
@@ -231,8 +357,7 @@ def freeman_nlp():
 
 def rekha_nlp():
     print ("Rekha's Work")
-    sentiment_display(clean_lemma_sentences)
-
+    sentiment_display()
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
