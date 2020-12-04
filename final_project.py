@@ -61,7 +61,7 @@ def classification_display(list_of_sentences):
     print("In Classification")
 
 def sentiment_display():
-    print("In Sentiment")
+
     suicide_dataset = read_dataset()[3000:4000]
     emotions_dataset = read_emotion_dataset()
 
@@ -126,6 +126,23 @@ def important_factors_display(list_of_sentences):
     plt.barh(terms, weights, align="center")
     plt.savefig(path.join(d, 'resources/word_weight.jpg'), dpi=200)
     plt.show()
+
+def random_forest_similarity_display(sentence):
+
+    suicide_dataset = read_dataset()[3000:4000]
+
+    tfidf_vect, tfidf = tfidf_vectorizer(suicide_dataset['tweet'])
+    X_features = pd.concat([pd.DataFrame(tfidf.toarray())], axis=1)
+    X_train, X_val, y_train, y_val = train_test_split(X_features, suicide_dataset['label'], test_size=0.2)
+
+    rf = RandomForestClassifier(n_estimators=500)
+    rf.fit(X_train, y_train)
+
+    label = {0: 'Rejected', 1: 'Confirmed'}
+    X = tfidf_vect.transform([sentence])
+
+    print('Prediction: %s\nAccuracy: %.2f%%'
+          % (label[rf.predict(X)[0]], np.max(rf.predict_proba(X)) * 100))
 
 def cosine_similarity_display(document_corpus, sentence):
 
@@ -338,6 +355,7 @@ def sergey_nlp():
     important_factors_display(clean_token_sentences)
     pos_tagging_and_display(clean_tokens_strings)
     ner_labeling_and_display(clean_tokens_strings)
+    random_forest_similarity_display("I am thinking about walking in the park")
 
 def morgan_nlp():
     print ("Morgan's Work")
@@ -371,7 +389,7 @@ if __name__ == '__main__':
     clena_lemmas = []
 
     sergey_nlp()
-    morgan_nlp()
-    norberto_nlp()
-    freeman_nlp()
-    rekha_nlp()
+    #morgan_nlp()
+    #norberto_nlp()
+    #freeman_nlp()
+    #rekha_nlp()
