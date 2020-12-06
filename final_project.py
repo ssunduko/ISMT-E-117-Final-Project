@@ -16,7 +16,7 @@ from importlib import reload
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 
 from pylab import *
 from nltk.corpus import stopwords
@@ -96,9 +96,6 @@ def sentiment_display():
 def reason_display(list_of_sentences):
     print("In Reason")
 
-def adjectives_display(list_of_sentences):
-    print("In Adjectives")
-
 def intention_vs_action_display(list_of_sentences):
     print("In Intention")
 
@@ -106,7 +103,7 @@ def important_factors_display(list_of_sentences):
 
     d = getcwd()
 
-    tfidf_vectorizer = TfidfVectorizer()
+    tfidf_vectorizer = TfidfVectorizer(max_df=0.45, min_df=2, stop_words='english', use_idf=True)
     tfidf = tfidf_vectorizer.fit_transform(list_of_sentences)
 
     lsa = TruncatedSVD(25, algorithm='randomized')
@@ -129,7 +126,7 @@ def important_factors_display(list_of_sentences):
 
 def random_forest_similarity_display(sentence):
 
-    suicide_dataset = read_dataset()[3000:4000]
+    suicide_dataset = read_dataset()
 
     tfidf_vect, tfidf = tfidf_vectorizer(suicide_dataset['tweet'])
     X_features = pd.concat([pd.DataFrame(tfidf.toarray())], axis=1)
@@ -146,24 +143,24 @@ def random_forest_similarity_display(sentence):
 
 def cosine_similarity_display(document_corpus, sentence):
 
-    document_corpus.append(sentence)
+    document_corpus.insert(0, sentence)
 
-    tfidf_vectorizer = TfidfVectorizer(stop_words='english')
+    tfidf_vectorizer = TfidfVectorizer(max_df=0.45, min_df=2, stop_words='english', use_idf=True)
     sparse_matrix = tfidf_vectorizer.fit_transform(document_corpus)
 
     cosine = cosine_similarity(sparse_matrix[0:1], sparse_matrix)
 
-    circle1 = plt.Circle((0, 0), 1, alpha=.5)
-    plt.ylim([-1.1, 1.1])
     fig = plt.gcf()
-    fig.gca().add_artist(circle1)
 
     for i in range(len(cosine)):
         for j in range(len(cosine[i])):
             d = 2 * 1 * (1 - cosine[0][j])
-            circle2 = plt.Circle((d, 0), 1, alpha=.5)
+            if(j == 0):
+                circle = plt.Circle((d, 0), 1, alpha=.5, color='g')
+            else:
+                circle = plt.Circle((d, 0), 1, alpha=.5, color='b')
             plt.xlim([-1.1, 1.1 + d])
-            fig.gca().add_artist(circle2)
+            fig.gca().add_artist(circle)
 
     plt.savefig('resources/cosine_overlap.jpg')
     plt.show()
@@ -193,8 +190,10 @@ def pos_tagging_and_display(sentence):
     token_list = tokenizer(sentence)
     for token in token_list:
         print(token, token.tag_, token.pos_, spacy.explain(token.tag_))
+        if (spacy.explain(token.tag_) == 'adjective'):
+            adj.append(token)
 
-    displacy.serve(token_list, style="dep")
+    #displacy.serve(token_list, style="dep")
 
 def ner_labeling_and_display(sentence):
 
@@ -203,7 +202,7 @@ def ner_labeling_and_display(sentence):
     for token in token_list.ents:
         print(token.text, '->', token.label_)
 
-    displacy.serve(token_list, style = "ent")
+    #displacy.serve(token_list, style = "ent")
 
 def most_common_words_display(sentence):
 
@@ -219,6 +218,26 @@ def most_common_words_display(sentence):
     sns_bar.set_xticklabels(words, rotation=90)
     plt.title('Most Common Words')
     plt.savefig(path.join(d, 'resources/word_count.jpg'), dpi=200)
+    plt.show()
+
+def most_common_adj_display(sentence):
+
+    pos_tagging_and_display(sentence)
+
+    adjectives = ' '.join(map(str, adj))
+
+    d = getcwd()
+    freq = Counter(adjectives.split(" "))
+    sns.set_style("darkgrid")
+    words = [word[0] for word in freq.most_common(10)]
+    count = [word[1] for word in freq.most_common(10)]
+
+    plt.figure(figsize=(10, 10))
+
+    sns_bar = sns.barplot(x=words, y=count)
+    sns_bar.set_xticklabels(words, rotation=90)
+    plt.title('Most Used Adjectives')
+    plt.savefig(path.join(d, 'resources/adj_count.jpg'), dpi=200)
     plt.show()
 
 def word_cloud_display(sentence):
@@ -251,7 +270,9 @@ def data_preprocessing():
             clean_token_sentences.append(tokens)
             clean_lemma_sentences.append(lemmas)
             clean_tokens.append(tokenizer(tokens))
+            clean_lemmas.append(tokenizer(lemmas))
             dirty_sentences.append(row['tweet'])
+
 
 def read_dataset():
     data = pd.read_csv('data/data_set.csv')
@@ -287,9 +308,15 @@ def clean_sentences(sentence):
 
 def tfidf_vectorizer(data):
     print ("TF-IDF Vectorizer")
-    tfidf_vect = TfidfVectorizer()
+    tfidf_vect = TfidfVectorizer(max_df=0.45, min_df=2, stop_words='english', use_idf=True)
     X_train_tfidf = tfidf_vect.fit_transform(data)
     return tfidf_vect, X_train_tfidf
+
+def hashing_vectorizer(data):
+    print ("Hashing Vectorizer")
+    hash_vect = HashingVectorizer()
+    X_train_hash = hash_vect.fit_transform(data)
+    return hash_vect, X_train_hash
 
 def count_vectorizer(data):
     print ("Count Vectorizer")
@@ -346,16 +373,21 @@ def final_project(name):
 def sergey_nlp():
     print("Sergey's Work")
 
-    data_preprocessing()
-    clean_tokens_strings = ' '.join(map(str, clean_tokens))
+    #data_preprocessing()
+    #clean_tokens_strings = ' '.join(map(str, clean_tokens))
+    #clean_lemma_strings = ' '.join(map(str, clean_lemmas))
 
-    most_common_words_display(clean_tokens_strings)
-    cosine_similarity_display(clean_lemma_sentences,' '.join(map(str, list_of_clean_lemmas("I want to kill myself"))))
-    word_cloud_display(clean_tokens_strings)
-    important_factors_display(clean_token_sentences)
-    pos_tagging_and_display(clean_tokens_strings)
-    ner_labeling_and_display(clean_tokens_strings)
-    random_forest_similarity_display("I am thinking about walking in the park")
+    #most_common_words_display(clean_lemma_strings)
+    #word_cloud_display(clean_lemma_strings)
+    #cosine_similarity_display(dirty_sentences,"I want to walk in the park")
+    #cosine_similarity_display(dirty_sentences, "I want to kill myself")
+    #word_cloud_display(clean_tokens_strings)
+    #important_factors_display(clean_lemma_sentences)
+    #pos_tagging_and_display(clean_tokens_strings)
+    #most_common_adj_display(clean_tokens_strings)
+    #ner_labeling_and_display(clean_tokens_strings)
+    #random_forest_similarity_display("I am thinking about walking in the park")
+    random_forest_similarity_display("I want to kill myself")
 
 def morgan_nlp():
     print ("Morgan's Work")
@@ -370,7 +402,6 @@ def freeman_nlp():
     print ("Freeman's Work")
 
     reason_display(clean_lemma_sentences)
-    adjectives_display(clean_lemma_sentences)
     intention_vs_action_display(clean_lemma_sentences)
 
 def rekha_nlp():
@@ -386,7 +417,8 @@ if __name__ == '__main__':
     clean_token_sentences = []
     clean_lemma_sentences = []
     clean_tokens = []
-    clena_lemmas = []
+    clean_lemmas = []
+    adj = []
 
     sergey_nlp()
     #morgan_nlp()
