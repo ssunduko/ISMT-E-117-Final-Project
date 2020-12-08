@@ -3,15 +3,15 @@ from itertools import islice
 from csv import DictReader
 
 TRAINING_FILE = 'data/data_set.csv'
+BEST_TRAINING_FILE = 'data/best_training_set.csv'
+TEST_FILE = 'data/test_set.csv'
 
-#TODO: This should return a class, not a list of tuples
-#TODO: Return all records
-def read_training_file(limit):
+def read_file(file):
     result = []
 
-    with open(TRAINING_FILE, 'r', encoding='utf-8') as read_obj:
+    with open(file, 'r', encoding='utf-8') as read_obj:
         csv_dict_reader = DictReader(read_obj)
-        for row in islice(csv_dict_reader, limit):
+        for row in csv_dict_reader:
             result.append((row["label"], row["tweet"]))
 
     return result
