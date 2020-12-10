@@ -19,7 +19,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 
 from pylab import *
-from nltk.corpus import stopwords
+from nltk.corpus import stopwords, wordnet
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfTransformer, TfidfVectorizer
 from sklearn.preprocessing import Normalizer
