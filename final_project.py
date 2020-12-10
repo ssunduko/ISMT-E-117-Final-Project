@@ -67,7 +67,7 @@ def classification_display(list_of_sentences):
 
 def sentiment_display():
     suicide_dataset = read_dataset()[0:1000]
-    emotions_dataset = read_emotion_dataset()
+    emotions_dataset = read_emotion_dataset('data/best_dataset_emotions.csv')
 
     tfidf_vect, tfidf = tfidf_vectorizer(emotions_dataset['cleaned'])
     X_features = pd.concat([pd.DataFrame(tfidf.toarray())], axis=1)
@@ -126,7 +126,7 @@ def sentiment_display():
     print ("Test Set data is available in resources/testset_emotions.csv")
 
 def unsupervised_clustering():
-    emotions_dataset = read_emotion_dataset()
+    emotions_dataset = read_emotion_dataset('data/best_dataset_emotions.csv')
     texts = emotions_dataset.cleaned
     vectorizer = TfidfVectorizer(max_df=0.45, min_df=2, stop_words='english', use_idf=True)
     X = vectorizer.fit_transform(texts)
