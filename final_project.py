@@ -95,6 +95,195 @@ def sentiment_display():
 
 def reason_display(list_of_sentences):
     print("In Reason")
+    d = getcwd()
+    tfidf_vectorizer = TfidfVectorizer()
+    tfidf = tfidf_vectorizer.fit_transform(list_of_sentences)
+
+    lsa = TruncatedSVD(2, algorithm='randomized')
+    dtm_lsa = lsa.fit_transform(tfidf)
+    #dtm_lsa = Normalizer(copy=False).fit_transform(dtm_lsa)
+
+    sigma = lsa.singular_values_
+    VT = lsa.components_.T
+
+
+
+    sing_vecs = lsa.components_[0]
+    index = np.argsort(sing_vecs).tolist()
+    index.reverse()
+    terms = [tfidf_vectorizer.get_feature_names()[weightIndex] for weightIndex in index]
+
+
+    #factors evaluated for suicide as described by https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1449832/
+    fam_list = []
+    school_list = []
+    ethnicity_list = []
+    religion_list = []
+    community_list = []
+    friends_list = []
+    sex_list = []
+    alcohol_list = []
+    depression_list = []
+    appearance_list = []
+
+
+    syns_family = wordnet.synsets("family")
+    syns_school = wordnet.synsets("school")
+    syns_ethnicity = wordnet.synsets("ethnicity")
+    syns_religion = wordnet.synsets("religion")
+    syns_community = wordnet.synsets("community")
+    syns_friends = wordnet.synsets("friends")
+    syns_sex = wordnet.synsets("sex")
+    syns_alcohol = wordnet.synsets("alcohol")
+    syns_depression = wordnet.synsets("depression")
+    syns_appearance = wordnet.synsets("appearance")
+
+
+
+
+
+    for t in terms:
+        word = wordnet.synsets(t)
+        if wordnet.synsets(t) != []:
+            fam_sim = (word[0].path_similarity(syns_family[0]))
+            if fam_sim != None:
+                fam_list.append(fam_sim)
+
+            school_sim = (word[0].path_similarity(syns_school[0]))
+            if school_sim != None:
+                school_list.append(school_sim)
+
+            ethnicity_sim = (word[0].path_similarity(syns_ethnicity[0]))
+            if ethnicity_sim != None:
+                ethnicity_list.append(ethnicity_sim)
+
+            religion_sim = (word[0].path_similarity(syns_religion[0]))
+            if religion_sim != None:
+                religion_list.append(religion_sim)
+
+            community_sim = (word[0].path_similarity(syns_community[0]))
+            if community_sim != None:
+                community_list.append(community_sim)
+
+            friends_sim = (word[0].path_similarity(syns_friends[0]))
+            if friends_sim != None:
+                friends_list.append(friends_sim)
+
+            sex_sim = (word[0].path_similarity(syns_sex[0]))
+            if sex_sim != None:
+                sex_list.append(sex_sim)
+
+            alcohol_sim = (word[0].path_similarity(syns_alcohol[0]))
+            if alcohol_sim != None:
+                alcohol_list.append(alcohol_sim)
+
+            depression_sim = (word[0].path_similarity(syns_depression[0]))
+            if depression_sim != None:
+                depression_list.append(depression_sim)
+
+            appearance_sim = (word[0].path_similarity(syns_appearance[0]))
+            if appearance_sim != None:
+                appearance_list.append(appearance_sim)
+
+
+    avg_sim = []
+
+    avg_sim.append(mean(fam_list))
+    avg_sim.append(mean(school_list))
+    avg_sim.append(mean(ethnicity_list))
+    avg_sim.append(mean(religion_list))
+    avg_sim.append(mean(community_list))
+    avg_sim.append(mean(friends_list))
+    avg_sim.append(mean(sex_list))
+    avg_sim.append(mean(alcohol_list))
+    avg_sim.append(mean(depression_list))
+    avg_sim.append(mean(appearance_list))
+
+    factors = ['Family', 'School', 'Ethnicity', 'Religion', 'Community', 'Friends', 'Sex', 'Alcohol', 'Depression', 'Appearance']
+    i = 0
+    for f in factors:
+
+        print('Average Path Similarity of the factor', f, 'to the terms in the data was :', avg_sim[i] )
+        i += 1
+
+    colors = ['green', 'teal', 'red', 'blue', 'purple', 'brown', 'orange', 'cyan', 'magenta', 'black']
+
+    plt.figure(figsize = [15, 10])
+    plt.bar(factors, avg_sim, color = colors)
+    plt.title("Reasons for Suicide")
+    plt.xlabel("Suicide Factors", labelpad = 10)
+    plt.ylabel("Relevance in Tweets")
+    plt.grid(True)
+    plt.savefig(path.join(d, 'resources/reasons_suicide.jpg'), dpi=200)
+
+    plt.show()
+
+
+def adjectives_display(list_of_sentences):
+    print("In Adjectives")
+
+    d = getcwd()
+
+
+
+    alive_dataset = read_dataset()[4000:4700]
+    suicide_dataset = read_dataset()[1000:1050]
+    sui_str = suicide_dataset.to_string()
+    alive_str = alive_dataset.to_string()
+
+
+    tokenizer = spacy.load("en_core_web_sm")
+    adjectives_sui = []
+
+    adjectives_alive = []
+
+
+    token_list_sui = tokenizer(sui_str)
+    token_list_alive = tokenizer(alive_str)
+
+
+    print('number of tokens in suicide data list', len(token_list_sui))
+
+
+    print('number of tokens in non suicide data list', len(token_list_alive))
+
+    for token in token_list_sui:
+        if token.pos_ == "ADJ":
+            #print('sui', token)
+            #print(token, token.tag_, token.pos_, spacy.explain(token.tag_))
+            adjectives_sui.append(token)
+
+    for token in token_list_alive:
+        if token.pos_ == "ADJ":
+            #print('alive', token)
+            #print(token, token.tag_, token.pos_, spacy.explain(token.tag_))
+            adjectives_alive.append(token)
+
+
+    num_adj_sui = len(adjectives_sui)
+    num_adj_alive = len(adjectives_alive)
+    print('number of adj in suicide data list', num_adj_sui)
+    print('number of adj in non suicide data list', num_adj_alive)
+
+    non_adj_sui = len(token_list_sui) - num_adj_sui
+    non_adj_alive = len(token_list_alive) - num_adj_alive
+
+    label_sui = ['Adjectives' , 'Non Adjectives']
+    label_alive = ['Adjectives' , 'Non Adjectives']
+
+    plt.rc('font', size = 8)
+    breakdown_sui = [num_adj_sui, non_adj_sui]
+    breakdown_alive = [num_adj_alive, non_adj_alive]
+    fig, axs = plt.subplots(2)
+    fig.suptitle('Use of Adjectives vs. other POS in Suicidal Tweets')
+    explode = (0, .2)
+    axs[0].pie(breakdown_sui, explode = explode, labels = label_sui, autopct = '%1.1f%%', shadow = True)
+    axs[0].set_title('Tweets that Led to Suicide')
+    axs[1].pie(breakdown_alive, explode = explode, labels = label_alive, autopct = '%1.1f%%', shadow = True)
+    axs[1].set_title('Did not Lead to Suicide')
+    plt.savefig(path.join(d, 'resources/adjectives.jpg'), dpi=200)
+    plt.show()
+
 
 def intention_vs_action_display(list_of_sentences):
     print("In Intention")
@@ -401,8 +590,9 @@ def norberto_nlp():
 def freeman_nlp():
     print ("Freeman's Work")
 
+    adjectives_display(clean_lemma_sentences)
     reason_display(clean_lemma_sentences)
-    intention_vs_action_display(clean_lemma_sentences)
+    #intention_vs_action_display(clean_lemma_sentences)
 
 def rekha_nlp():
     print ("Rekha's Work")
